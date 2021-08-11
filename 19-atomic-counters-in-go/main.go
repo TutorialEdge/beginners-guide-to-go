@@ -4,7 +4,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+
+	"sync/atomic"
 )
+
+var processed int64
 
 type Site struct {
 	URL string
@@ -22,6 +26,7 @@ func crawl(wId int, jobs <-chan Site, results chan<- Result) {
 		if err != nil {
 			log.Println(err.Error())
 		}
+		atomic.AddInt64(&processed, 1)
 		results <- Result{
 			URL:    site.URL,
 			Status: resp.StatusCode,
@@ -30,7 +35,7 @@ func crawl(wId int, jobs <-chan Site, results chan<- Result) {
 }
 
 func main() {
-	fmt.Println("worker pools in Go")
+	fmt.Println("Atomic Counters in Go")
 
 	jobs := make(chan Site, 3)
 	results := make(chan Result, 3)
@@ -55,5 +60,7 @@ func main() {
 		result := <-results
 		log.Println(result)
 	}
+
+	fmt.Printf("URLs Processed: %d\n", processed)
 
 }
